@@ -21,7 +21,7 @@ public:
 	~CServer() {}
 
 	int Initialize();
-	int CreateSocket();
+	int Listen();
 
 private:
 	PCSTR m_PortNumber;
