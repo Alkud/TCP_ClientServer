@@ -145,10 +145,12 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Server.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Server.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="TCP_Server.cpp" />
   </ItemGroup>

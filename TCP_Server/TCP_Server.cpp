@@ -1,10 +1,8 @@
-// TCP_Server.cpp : Defines the entry point for the console application.
-//
+// TCP_Server.cpp in TCP_Server project
 
 #include "stdafx.h"
 
-
-int main()
+int main(int argc, char* argv[])
 {
     return 0;
 }
