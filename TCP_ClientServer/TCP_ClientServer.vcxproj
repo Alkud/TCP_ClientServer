@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{CE48C662-2FFD-48FC-985E-53F1991DDC0D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>TCP_ClientServer</RootNamespace>
+    <RootNamespace>TCP_Client</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
     <ProjectName>TCP_Client</ProjectName>
   </PropertyGroup>
