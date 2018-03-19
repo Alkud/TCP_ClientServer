@@ -10,18 +10,21 @@
 
 #pragma comment (lib, "WS2_32.lib")
 
-#define DEFAULT_PORT 11283
+#define DEFAULT_PORT "11283"
 
 class CServer
 {
 public:
-	CServer(int portNumber = DEFAULT_PORT) :
-		m_PortNumber{ portNumber } {}
+	CServer(PCSTR portNumber = DEFAULT_PORT);		
 	~CServer() {}
+
 	int Initialize();
 	int CreateSocket();
 
 private:
-	int m_PortNumber;
+	PCSTR m_PortNumber;
+	PADDRINFOA m_AddrInfo;
+	SOCKET m_ListenSocket;
+	SOCKET m_ClientSocket;
 };
 
