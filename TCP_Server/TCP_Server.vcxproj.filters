@@ -29,7 +29,7 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TCP_Client.cpp">
+    <ClCompile Include="TCP_Server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

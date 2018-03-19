@@ -19,11 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{CE48C662-2FFD-48FC-985E-53F1991DDC0D}</ProjectGuid>
+    <ProjectGuid>{1A592C39-1D24-4E92-A3C4-D6E8AA5FF7EB}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>TCP_ClientServer</RootNamespace>
+    <RootNamespace>TCP_Server</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
-    <ProjectName>TCP_Client</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -151,7 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="TCP_Client.cpp" />
+    <ClCompile Include="TCP_Server.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
