@@ -9,11 +9,15 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
+#include <atomic>
+#include <mutex>
 
 #pragma comment (lib, "WS2_32.lib")
 
 #define DEFAULT_PORT "11283"
 #define MAX_CONN 0x100
+
+using stringVector = std::vector<std::string>;
 
 class CServer
 {
@@ -25,11 +29,23 @@ public:
 	int Listen();
 	int Receive();
 
+	int GetNumClients()
+	{ return m_NumClients.load();}
+
+	void ListTrasnsactions();
+
 private:
+	void GetClientData(const SOCKET* clientSocket/*, std::mutex& containerLock, stringVector& destinationContainer*/);
+	bool CheckTransaction(const std::string& transaction, const char delimiter);
+	stringVector SplitTransaction(const std::string& transaction, const char delimiter);
+
 	PCSTR m_PortNumber;
 	PADDRINFOA m_AddrInfo;
 	SOCKET m_ListenSocket;
 
-	static int m_NumClients;
+	std::atomic_int m_NumClients;
+
+	std::mutex dataMutex;
+	stringVector receivedData;
 };
 
