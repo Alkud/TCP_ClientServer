@@ -135,10 +135,15 @@ void CServer::GetClientData(const SOCKET* clientSocket)
 	while (iResult != SOCKET_ERROR && bytesReceived > 0)
 	{
 		std::string packetString{ std::string(inputBuffer, bytesReceived) };
-		if (CheckTransaction(transactionString, '|'))
+		if (CheckPacket(packetString, '|'))
 		{
 			dataMutex.lock();
-			receivedData.push_back(transactionString);
+			auto transactions{ SplitPacket(packetString, '|') };
+			for (auto transactionString : transactions)
+			{
+				if (CheckTransaction(transactionString, '|'))
+					receivedData.push_back(transactionString);
+			}
 			dataMutex.unlock();
 		}
 	}
@@ -178,6 +183,7 @@ stringVector CServer::SplitPacket(const std::string & packet, const char delimit
 			transactionString += packet.substr(first, last - first + 1);
 			result.push_back(transactionString);
 			transactionString.clear();
+			delimitersCount = 0;
 		}
 		else
 		{
@@ -186,7 +192,6 @@ stringVector CServer::SplitPacket(const std::string & packet, const char delimit
 		first = last + 1;
 		last = packet.find_first_of(delimiter, first);
 	}
-	result.push_back(packet.substr(first));
 	return result;
 }
 
@@ -231,6 +236,5 @@ stringVector CServer::SplitTransaction(const std::string& transaction, const cha
 		first = last + 1;
 		last = transaction.find_first_of(delimiter, first);
 	}
-	result.push_back(transaction.substr(first));
 	return result;
 }

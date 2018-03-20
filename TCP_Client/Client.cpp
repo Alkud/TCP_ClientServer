@@ -83,11 +83,42 @@ void CClient::Send()
 	while (!dataToSend.empty())
 	{
 		int iResult{};
-		size_t packetsToSend{ dataToSend.size() % 5 == 0 ? 5 : dataToSend.size() % 5 }; // Send 5 transactions or less
-
+		size_t packetsToSend{ dataToSend.size() >= 5 ? 5 : dataToSend.size() % 5 }; // Send 5 transactions or less
 
 		iResult = send(m_Socket, dataToSend.front().data(),
 			dataToSend.front().length(), 0);
+		if (SOCKET_ERROR == iResult)
+		{
+			// TODO log send error
+			closesocket(m_Socket);
+			break;
+		}
 	}
+}
+
+void CClient::PushTransaction(const std::string & singleTransaction)
+{
+	if (CheckTransaction(singleTransaction, '|'))
+		dataToSend.push_back(singleTransaction);
+}
+
+void CClient::PushFile(const std::string & fileName)
+{
+}
+
+bool CClient::CheckTransaction(const std::string & transaction, const char delimiter)
+{
+	if (transaction.empty())
+		return false;
+	size_t first{ 0U };
+	size_t last{ transaction.find_first_of(delimiter, 0) };
+	size_t delimitersCount{};
+	while (last != std::string::npos)
+	{
+		delimitersCount++;
+		first = last + 1;
+		last = transaction.find_first_of(delimiter, first);
+	}
+	return (delimitersCount == 5);
 }
 

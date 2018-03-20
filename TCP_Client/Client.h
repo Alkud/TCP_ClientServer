@@ -30,7 +30,11 @@ public:
 private:	
 	int Connect();
 	int Disconnect();
-	void Send();	
+	void Send();
+	void PushTransaction(const std::string& singleTransaction);
+	void PushFile(const std::string& fileName);
+
+	bool CheckTransaction(const std::string& transaction, const char delimiter);
 
 	PCSTR m_ServerAddress;
 	PCSTR m_ServerPortNumber;
