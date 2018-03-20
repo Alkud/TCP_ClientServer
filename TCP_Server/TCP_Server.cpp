@@ -24,7 +24,7 @@ void process(CServer& server)
 
 int main(int argc, char* argv[])
 {
-	CServer server{ argv[0] };
+	CServer server{ argv[1] };
 	std::cout << "Server created, enter an instruction or quit to exit" << std::endl;
 	std::cout << "local server: ";
 	std::string userInput{};
@@ -68,7 +68,8 @@ int main(int argc, char* argv[])
 		}
 		std::cin >> userInput;
 	}
-	serverThread.join();
+	if (threadCreated)
+		serverThread.join();
     return 0;
 }
 

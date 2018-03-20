@@ -10,7 +10,7 @@
 
 std::atomic_bool shouldExit{ false };
 
-void process(CServer& server)
+/*void process(CServer& server)
 {
 	if (!server.Initialize())
 	{
@@ -71,4 +71,4 @@ int main(int argc, char* argv[])
 	}
 	serverThread.join();
 	return 0;
-}
+}*/

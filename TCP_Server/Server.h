@@ -21,7 +21,7 @@ using stringVector = std::vector<std::string>;
 class CServer
 {
 public:
-	CServer(PCSTR portNumber = DEFAULT_PORT);		
+	CServer(PCSTR portNumber);		
 	~CServer();
 
 	int Initialize();
@@ -36,7 +36,7 @@ public:
 private:
 	int Listen();
 	void Receive();
-	void GetClientData(const SOCKET* clientSocket/*, std::mutex& containerLock, stringVector& destinationContainer*/);
+	void GetClientData(const SOCKET* clientSocket);
 	bool CheckTransaction(const std::string& transaction, const char delimiter);
 	stringVector SplitTransaction(const std::string& transaction, const char delimiter);
 

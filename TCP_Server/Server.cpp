@@ -6,7 +6,7 @@
 #include <iostream>
 
 CServer::CServer(PCSTR portNumber) :
-	m_PortNumber{ portNumber }, m_AddrInfo{nullptr},
+	m_PortNumber{ portNumber ? portNumber : DEFAULT_PORT }, m_AddrInfo{ nullptr },
 	m_ListenSocket { INVALID_SOCKET}
 {
 	m_NumClients.store(0);
@@ -122,7 +122,7 @@ void CServer::ListTrasnsactions()
 	dataMutex.unlock();
 }
 
-void CServer::GetClientData(const SOCKET* clientSocket/*, std::mutex& containerLock, stringVector& destinationContainer*/)
+void CServer::GetClientData(const SOCKET* clientSocket)
 {
 	if (nullptr == clientSocket)
 		return;
@@ -143,10 +143,24 @@ void CServer::GetClientData(const SOCKET* clientSocket/*, std::mutex& containerL
 		}
 	}
 
+	if (iResult)
+	{
+		//TODO log recv error
+	}
+
 	//TODO log "From client [addr]: received # transactions"
 
 	std::string response{ "Received " + std::to_string(result.size()) + " transactions" };
 	send(*clientSocket, response.data(), response.length(), 0);
+
+	/* Disconnect the client */
+	iResult = shutdown(*clientSocket, SD_SEND);
+	if (SOCKET_ERROR == iResult)
+	{
+		// TODO log shutdown error
+	}
+
+	closesocket(*clientSocket);
 }
 
 bool CServer::CheckTransaction(const std::string& transaction, const char delimiter)
