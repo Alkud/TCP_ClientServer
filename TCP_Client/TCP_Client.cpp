@@ -26,12 +26,12 @@ void process(CClient& client)
 int main(int argc, char* argv[])
 {
 	CClient client{ argv[0], argv[1] };
-	std::cout << "Server created, enter an instruction or quit to exit" << std::endl;
-	std::cout << "local server: ";
+	std::cout << "Client created, enter an instruction or 'quit' to exit" << std::endl;
+	std::cout << "client: ";
 	std::string userInput{};
 	std::cin >> userInput;
 
-	std::thread serverThread{};
+	std::thread clientThread{};
 	bool threadCreated{ false };
 
 	while (true)
@@ -40,12 +40,12 @@ int main(int argc, char* argv[])
 		{
 			if (threadCreated)
 			{
-				std::cout << "Server is already running" << std::endl;
-				std::cout << "local server: ";
+				std::cout << "Client is already running" << std::endl;
+				std::cout << "client: ";
 			}
 			else
 			{
-				serverThread = std::thread{ process, std::ref(server) };
+				clientThread = std::thread{ process, std::ref(client) };
 				threadCreated = true;
 				std::cout << "Server started successfully" << std::endl;
 				std::cout << "local server: ";

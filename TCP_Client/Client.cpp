@@ -1,5 +1,7 @@
 #include "Client.h"
-
+#include <fstream>
+#include <string>
+#include <iostream>
 
 
 CClient::CClient(PCSTR serverAddress, PCSTR serverPort) :
@@ -28,7 +30,8 @@ int CClient::Initialize()
 
 int CClient::run()
 {
-	return 0;
+	if (Connect())
+		Send();
 }
 
 int CClient::Connect()
@@ -75,14 +78,21 @@ int CClient::Connect()
 
 int CClient::Disconnect()
 {
-	return 0;
+	/* Disconnect the client */
+	int iResult{ shutdown(m_Socket, SD_SEND) };
+	if (SOCKET_ERROR == iResult)
+	{
+		// TODO log shutdown error
+	}
+	closesocket(m_Socket);
 }
 
 void CClient::Send()
 {
+	int iResult{};
+	/* Send queued transactions */
 	while (!dataToSend.empty())
-	{
-		int iResult{};
+	{	
 		size_t packetsToSend{ dataToSend.size() >= 5 ? 5 : dataToSend.size() % 5 }; // Send 5 transactions or less
 
 		iResult = send(m_Socket, dataToSend.front().data(),
@@ -94,6 +104,25 @@ void CClient::Send()
 			break;
 		}
 	}
+	/* Receive server reply */
+	int bytesReceived{};
+	char inputBuffer[1000];
+	do
+	{
+		iResult = recv(m_Socket, inputBuffer, bytesReceived, 0);
+		if (iResult > 0)
+		{
+			std::cout << "Server reply: " << std::string(inputBuffer, bytesReceived) << std::endl;
+		}
+		else if (0 == iResult)
+		{
+			std::cout << "Connection closed" << std::endl;
+		}
+		else
+		{
+			//TODO log receive error
+		}
+	} while (iResult > 0 && bytesReceived > 0);	
 }
 
 void CClient::PushTransaction(const std::string & singleTransaction)
@@ -104,6 +133,18 @@ void CClient::PushTransaction(const std::string & singleTransaction)
 
 void CClient::PushFile(const std::string & fileName)
 {
+	std::ifstream inputFile(fileName, std::ios::out);
+	if (inputFile.is_open())
+	{
+		std::string transactionString{};
+		while (std::getline(inputFile, transactionString))
+		{
+			dataMutex.lock();
+			dataToSend.push_back(transactionString);
+			dataMutex.unlock();
+		}
+		inputFile.close();
+	}
 }
 
 bool CClient::CheckTransaction(const std::string & transaction, const char delimiter)
