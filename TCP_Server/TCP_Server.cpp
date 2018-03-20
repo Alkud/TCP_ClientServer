@@ -7,15 +7,18 @@
 #include <thread>
 #include <memory>
 
-bool shoulExit{ false };
+std::atomic_bool shouldExit{ false };
 
 void process(CServer& server)
 {	
-	server.Initialize();
-	while (!shoulExit)
+	if (!server.Initialize())
+	{	
+		shouldExit.store(true);
+	}	
+	while (!shouldExit.load())
 	{
-		server.Listen();
-		server.Receive();
+		if (server.run())
+			shouldExit.store(true);
 	}
 }
 
@@ -60,7 +63,7 @@ int main(int argc, char* argv[])
 		}
 		else if ("quit" == userInput)
 		{
-			shoulExit = true;
+			shouldExit.store(true);
 			break;
 		}
 		std::cin >> userInput;

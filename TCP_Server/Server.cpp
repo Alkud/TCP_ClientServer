@@ -12,6 +12,11 @@ CServer::CServer(PCSTR portNumber) :
 	m_NumClients.store(0);
 }
 
+CServer::~CServer()
+{
+	WSACleanup();
+}
+
 int CServer::Initialize()
 {
 	WSADATA wsaDATA{};
@@ -20,6 +25,17 @@ int CServer::Initialize()
 
 	iResult = WSAStartup(wVersionRequested, &wsaDATA);
 	return iResult;
+}
+
+int CServer::run()
+{
+	int iResult{Listen()};
+	if (iResult)
+	{
+		return iResult;
+	}
+	Receive();
+	return 0;
 }
 
 int CServer::Listen()
@@ -36,8 +52,8 @@ int CServer::Listen()
 
 	iResult = getaddrinfo(nullptr, m_PortNumber, &hints, &m_AddrInfo);
 	if (0 != iResult) // Resolve server address failed
-	{
-		WSACleanup();
+	{		
+		// TODO log error
 		return iResult; 
 	}		
 
@@ -45,8 +61,8 @@ int CServer::Listen()
 	if (INVALID_SOCKET == m_ListenSocket)  // Socket creation failed
 	{
 		iResult = WSAGetLastError();
-		freeaddrinfo(m_AddrInfo);
-		WSACleanup();
+		freeaddrinfo(m_AddrInfo);		
+		// TODO log error
 		return iResult;
 	}	
 
@@ -56,7 +72,7 @@ int CServer::Listen()
 	{
 		freeaddrinfo(m_AddrInfo);
 		closesocket(m_ListenSocket);
-		WSACleanup();
+		// TODO log error
 		return iResult;
 	}
 
@@ -68,16 +84,16 @@ int CServer::Listen()
 	iResult = listen(m_ListenSocket, MAX_CONN);
 	if (SOCKET_ERROR == iResult) // Bind failed
 	{	
-		closesocket(m_ListenSocket);
-		WSACleanup();
+		closesocket(m_ListenSocket);	
+		// TODO log error
 		return iResult;
 	}	
-
 	return iResult;
 }
 
-int CServer::Receive()
+void CServer::Receive()
 {
+	int iResult{};
 	sockaddr_in clientAddress{};
 	int clientAddressSize{ sizeof(clientAddress) };
 
@@ -94,15 +110,16 @@ int CServer::Receive()
 		// TODO log "accepted, client host name"
 		std::thread newThread{ [=] {this->GetClientData(clientSocket.get()); } };
 	}
-	return 0;
 }
 
 void CServer::ListTrasnsactions()
 {
+	dataMutex.lock();
 	for (auto& item : receivedData)
 	{
 		std::cout << item << std::endl;
 	}
+	dataMutex.unlock();
 }
 
 void CServer::GetClientData(const SOCKET* clientSocket/*, std::mutex& containerLock, stringVector& destinationContainer*/)
