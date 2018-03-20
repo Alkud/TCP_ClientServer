@@ -29,6 +29,7 @@ private:
 	PCSTR m_PortNumber;
 	PADDRINFOA m_AddrInfo;
 	SOCKET m_ListenSocket;
-	SOCKET m_ClientSocket;
+
+	static int m_NumClients;
 };
 

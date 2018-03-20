@@ -1,11 +1,21 @@
 #include "Server.h"
 #include <cstring>
+#include <thread>
 
 
+int CServer::m_NumClients = 0;
+
+class CGetClientData
+{
+	void operator()(const SOCKET& clienSocket)
+	{
+		//send(clientSocket)
+	}
+};
 
 CServer::CServer(PCSTR portNumber) :
 	m_PortNumber{ portNumber }, m_AddrInfo{nullptr},
-	m_ListenSocket { INVALID_SOCKET}, m_ClientSocket{ INVALID_SOCKET}
+	m_ListenSocket { INVALID_SOCKET}
 {
 }
 
@@ -59,6 +69,8 @@ int CServer::Listen()
 
 	freeaddrinfo(m_AddrInfo);
 
+	//TODO log "listen for connections"
+
 	/* Listen for client connections */
 	iResult = listen(m_ListenSocket, MAX_CONN);
 	if (SOCKET_ERROR == iResult) // Bind failed
@@ -76,10 +88,20 @@ int CServer::Receive()
 	sockaddr_in clientAddress{};
 	int clientAddressSize{ sizeof(clientAddress) };
 
-	m_ClientSocket = accept(m_ListenSocket,
-		static_cast<sockaddr*>(&clientAddress),
-		&clientAddressSize);
+	SOCKET clientSocket{ accept(m_ListenSocket,
+					     reinterpret_cast<sockaddr*>(&clientAddress),
+						 &clientAddressSize) };
+	while (clientSocket != INVALID_SOCKET)
+	{
+		m_NumClients++;
+		HOSTENT* clientHost;
+		clientHost = gethostbyaddr(reinterpret_cast<char*>(&clientAddress.sin_addr.S_un.S_addr),
+									4, AF_INET);
 
+		// TODO log "accepted, client host name"
+
+		std::thread newThread{};
+	}
 	return 0;
 }
 
