@@ -134,7 +134,7 @@ void CServer::GetClientData(const SOCKET* clientSocket)
 	int iResult{ recv(*clientSocket, inputBuffer, bytesReceived, 0) };
 	while (iResult != SOCKET_ERROR && bytesReceived > 0)
 	{
-		std::string transactionString{ std::string(inputBuffer, bytesReceived) };
+		std::string packetString{ std::string(inputBuffer, bytesReceived) };
 		if (CheckTransaction(transactionString, '|'))
 		{
 			dataMutex.lock();
@@ -163,8 +163,51 @@ void CServer::GetClientData(const SOCKET* clientSocket)
 	closesocket(*clientSocket);
 }
 
+stringVector CServer::SplitPacket(const std::string & packet, const char delimiter)
+{
+	stringVector result{};
+	auto first{ 0U };
+	auto last{ packet.find_first_of(delimiter, 0) };
+	size_t delimitersCount{};
+	std::string transactionString{};
+	while (last != std::string::npos)
+	{
+		delimitersCount++;
+		if (5 == delimitersCount)
+		{
+			transactionString += packet.substr(first, last - first + 1);
+			result.push_back(transactionString);
+			transactionString.clear();
+		}
+		else
+		{
+			transactionString += packet.substr(first, last - first + 1);
+		}
+		first = last + 1;
+		last = packet.find_first_of(delimiter, first);
+	}
+	result.push_back(packet.substr(first));
+	return result;
+}
+
+bool CServer::CheckPacket(const std::string & packet, const char delimiter)
+{
+	size_t first{ 0U };
+	size_t last{ packet.find_first_of(delimiter, 0) };
+	size_t delimitersCount{};
+	while (last != std::string::npos)
+	{
+		delimitersCount++;
+		first = last + 1;
+		last = packet.find_first_of(delimiter, first);
+	}
+	return (delimitersCount % 5 == 0);
+}
+
 bool CServer::CheckTransaction(const std::string& transaction, const char delimiter)
 {
+	if (transaction.empty())
+		return false;
 	size_t first{ 0U };
 	size_t last{ transaction.find_first_of(delimiter, 0) };
 	size_t delimitersCount{};

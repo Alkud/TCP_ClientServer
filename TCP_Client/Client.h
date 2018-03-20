@@ -6,14 +6,14 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdlib.h>
-#include <vector>
+#include <deque>
 #include <string>
 #include <atomic>
 #include <mutex>
 
 #pragma comment (lib, "WS2_32.lib")
 
-using stringVector = std::vector<std::string>;
+using stringDeque = std::deque<std::string>;
 
 #define DEFAULT_ADDRESS "127.0.0.1"
 #define DEFAULT_PORT "11283"
@@ -36,5 +36,8 @@ private:
 	PCSTR m_ServerPortNumber;
 	PADDRINFOA m_ServerAddrInfo;
 	SOCKET m_Socket;
+
+	std::mutex dataMutex;
+	stringDeque dataToSend;
 };
 

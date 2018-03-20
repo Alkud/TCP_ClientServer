@@ -50,21 +50,24 @@ int CClient::Connect()
 	{
 		// TODO log error
 		return iResult;
-	}
+	}	
 
+	/* Creating socket */
+	m_Socket = socket(m_ServerAddrInfo->ai_family, m_ServerAddrInfo->ai_socktype, m_ServerAddrInfo->ai_protocol);
 	
-
-	/* Attempt to conect to an address until one succeeds */
-	for (PADDRINFOA tempAddrInfo{ m_ServerAddrInfo }; tempAddrInfo != nullptr;
-		tempAddrInfo = tempAddrInfo->ai_next)
-	{
-		m_Socket = socket(tempAddrInfo->ai_family, tempAddrInfo->ai_socktype, tempAddrInfo->ai_protocol);
-	}
-	
-	if (INVALID_SOCKET == m_ListenSocket)  // Socket creation failed
+	if (INVALID_SOCKET == m_Socket)  // Socket creation failed
 	{
 		iResult = WSAGetLastError();
-		freeaddrinfo(m_AddrInfo);
+		freeaddrinfo(m_ServerAddrInfo);
+		// TODO log error
+		return iResult;
+	}
+
+	/* Connect to the server */
+	iResult = connect(m_Socket, m_ServerAddrInfo->ai_addr, static_cast<int>(m_ServerAddrInfo->ai_addrlen));
+	if (SOCKET_ERROR == iResult)
+	{
+		freeaddrinfo(m_ServerAddrInfo);
 		// TODO log error
 		return iResult;
 	}
@@ -77,5 +80,14 @@ int CClient::Disconnect()
 
 void CClient::Send()
 {
+	while (!dataToSend.empty())
+	{
+		int iResult{};
+		size_t packetsToSend{ dataToSend.size() % 5 == 0 ? 5 : dataToSend.size() % 5 }; // Send 5 transactions or less
+
+
+		iResult = send(m_Socket, dataToSend.front().data(),
+			dataToSend.front().length(), 0);
+	}
 }
 
