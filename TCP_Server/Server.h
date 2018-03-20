@@ -13,6 +13,7 @@
 #pragma comment (lib, "WS2_32.lib")
 
 #define DEFAULT_PORT "11283"
+#define MAX_CONN 0x100
 
 class CServer
 {
@@ -22,6 +23,7 @@ public:
 
 	int Initialize();
 	int Listen();
+	int Receive();
 
 private:
 	PCSTR m_PortNumber;

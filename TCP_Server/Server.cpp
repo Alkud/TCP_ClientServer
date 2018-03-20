@@ -23,7 +23,7 @@ int CServer::Listen()
 {
 	int iResult{};
 
-	/* Creating listen a socket */
+	/* Creating a listen socket */
 	addrinfo hints{};
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
@@ -36,8 +36,7 @@ int CServer::Listen()
 	{
 		WSACleanup();
 		return iResult; 
-	}
-		
+	}		
 
 	m_ListenSocket = socket(m_AddrInfo->ai_family, m_AddrInfo->ai_socktype, m_AddrInfo->ai_protocol);
 	if (INVALID_SOCKET == m_ListenSocket)  // Socket creation failed
@@ -58,9 +57,29 @@ int CServer::Listen()
 		return iResult;
 	}
 
-	/* Listen for client connections */
+	freeaddrinfo(m_AddrInfo);
 
+	/* Listen for client connections */
+	iResult = listen(m_ListenSocket, MAX_CONN);
+	if (SOCKET_ERROR == iResult) // Bind failed
+	{	
+		closesocket(m_ListenSocket);
+		WSACleanup();
+		return iResult;
+	}	
 
 	return iResult;
+}
+
+int CServer::Receive()
+{
+	sockaddr_in clientAddress{};
+	int clientAddressSize{ sizeof(clientAddress) };
+
+	m_ClientSocket = accept(m_ListenSocket,
+		static_cast<sockaddr*>(&clientAddress),
+		&clientAddressSize);
+
+	return 0;
 }
 
