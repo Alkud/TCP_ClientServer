@@ -10,22 +10,22 @@
 
 std::atomic_bool shouldExit{ false };
 
-/*void process(CServer& server)
+void process(CClient& client)
 {
-	if (!server.Initialize())
+	if (!client.Initialize())
 	{
 		shouldExit.store(true);
 	}
 	while (!shouldExit.load())
 	{
-		if (server.run())
+		if (client.run())
 			shouldExit.store(true);
 	}
 }
 
 int main(int argc, char* argv[])
 {
-	CServer server{ argv[0] };
+	CClient client{ argv[0], argv[1] };
 	std::cout << "Server created, enter an instruction or quit to exit" << std::endl;
 	std::cout << "local server: ";
 	std::string userInput{};

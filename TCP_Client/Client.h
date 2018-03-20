@@ -15,12 +15,13 @@
 
 using stringVector = std::vector<std::string>;
 
-#define DEFAULT_PORT "9500"
+#define DEFAULT_ADDRESS "127.0.0.1"
+#define DEFAULT_PORT "11283"
 
 class CClient
 {
 public:
-	CClient(PCSTR portNumber);
+	CClient(PCSTR serverAddress, PCSTR serverPort);
 	~CClient();
 
 	int Initialize();	
@@ -31,6 +32,7 @@ private:
 	int Disconnect();
 	void Send();	
 
+	PCSTR m_ServerAddress;
 	PCSTR m_ServerPortNumber;
 	PADDRINFOA m_ServerAddrInfo;
 	SOCKET m_Socket;
