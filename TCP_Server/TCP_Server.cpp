@@ -11,7 +11,7 @@ std::atomic_bool shouldExit{ false };
 
 void process(CServer& server)
 {	
-	if (!server.Initialize())
+	if (server.Initialize())
 	{	
 		shouldExit.store(true);
 	}	
@@ -21,6 +21,8 @@ void process(CServer& server)
 			shouldExit.store(true);
 	}
 }
+
+
 
 int main(int argc, char* argv[])
 {
@@ -56,14 +58,32 @@ int main(int argc, char* argv[])
 		}
 		else if ("nclients" == userInput)
 		{
-			std::cout << "Currently connected: " << server.GetNumClients() << " clients" << std::endl;
-			std::cout << "local server: ";
+			if (threadCreated)
+			{
+				std::cout << "Currently connected: " << server.GetNumClients() << " clients" << std::endl;
+				std::cout << "local server: ";
+			}
+			else
+			{
+				std::cout << "Server not started!"<< std::endl;
+				std::cout << "local server: ";
+			}
+
+			
 		}
 		else if ("list" == userInput)
 		{
-			std::cout << "Received trnsactions: "<< std::endl;
-			server.ListTrasnsactions();
-			std::cout << "local server: ";
+			if (threadCreated)
+			{
+				std::cout << "Received trnsactions: " << std::endl;
+				server.ListTrasnsactions();
+				std::cout << "local server: ";
+			}
+			else
+			{
+				std::cout << "Server not started!" << std::endl;
+				std::cout << "local server: ";
+			}
 		}
 		else if ("quit" == userInput)
 		{

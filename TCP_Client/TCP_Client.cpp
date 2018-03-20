@@ -12,7 +12,7 @@ std::atomic_bool shouldExit{ false };
 
 void process(CClient& client)
 {
-	if (!client.Initialize())
+	if (client.Initialize())
 	{
 		shouldExit.store(true);
 	}
@@ -21,22 +21,41 @@ void process(CClient& client)
 		if (client.run())
 			shouldExit.store(true);
 	}
+	int i{};
 }
+
+stringVector SplitUserInput(std::string inputString)
+{
+	stringVector result{};
+	auto first{ 0U };
+	auto last{ inputString.find_first_of(' ', 0) };
+	while (last != std::string::npos)
+	{
+		result.push_back(inputString.substr(first, last - first));
+		first = last + 1;
+		last = inputString.find_first_of(' ', first);
+	}
+	result.push_back(inputString.substr(first));
+	return result;
+}
+
 
 int main(int argc, char* argv[])
 {
-	CClient client{ argv[0], argv[1] };
+	CClient client{ argv[1], argv[2] };
 	std::cout << "Client created, enter an instruction or 'quit' to exit" << std::endl;
 	std::cout << "client: ";
 	std::string userInput{};
-	std::cin >> userInput;
+	stringVector command{};
+	std::getline(std::cin, userInput);
+	command = SplitUserInput(userInput);
 
 	std::thread clientThread{};
 	bool threadCreated{ false };
 
 	while (true)
 	{
-		if ("start" == userInput)
+		if ("start" == command[0])
 		{
 			if (threadCreated)
 			{
@@ -47,28 +66,29 @@ int main(int argc, char* argv[])
 			{
 				clientThread = std::thread{ process, std::ref(client) };
 				threadCreated = true;
-				std::cout << "Server started successfully" << std::endl;
-				std::cout << "local server: ";
+				std::cout << "Client started successfully" << std::endl;
+				std::cout << "client: ";
 			}
 		}
-		else if ("nclients" == userInput)
+		else if ("send" == command[0])
 		{
-			std::cout << "Currently connected: " << server.GetNumClients() << " clients" << std::endl;
-			std::cout << "local server: ";
+			client.PushTransaction(command[1]);
+			std::cout << "client: ";
 		}
-		else if ("list" == userInput)
+		else if ("sendfile " == userInput)
 		{
-			std::cout << "Received trnsactions: " << std::endl;
-			server.ListTrasnsactions();
-			std::cout << "local server: ";
+			client.PushFile(command[1]);
+			std::cout << "client: ";
 		}
 		else if ("quit" == userInput)
 		{
 			shouldExit.store(true);
 			break;
 		}
-		std::cin >> userInput;
+		std::getline(std::cin, userInput);
+		command = SplitUserInput(userInput);
 	}
-	serverThread.join();
+	if (threadCreated)
+		clientThread.join();
 	return 0;
-}*/
+}

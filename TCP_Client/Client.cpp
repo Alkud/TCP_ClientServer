@@ -30,8 +30,16 @@ int CClient::Initialize()
 
 int CClient::run()
 {
-	if (Connect())
-		Send();
+	if (dataToSend.empty())
+		return 0;
+	int iResult{ Connect() };
+	if (iResult)
+	{
+		return iResult;
+	}
+	Send();	
+	//iResult = Disconnect();
+	return iResult;
 }
 
 int CClient::Connect()
@@ -83,38 +91,46 @@ int CClient::Disconnect()
 	if (SOCKET_ERROR == iResult)
 	{
 		// TODO log shutdown error
+		return iResult;
 	}
-	closesocket(m_Socket);
+	//iResult = closesocket(m_Socket);
+	return iResult;
 }
 
 void CClient::Send()
 {
+	if (dataToSend.empty())
+		return;
+
 	int iResult{};
 	/* Send queued transactions */
 	while (!dataToSend.empty())
 	{	
 		size_t packetsToSend{ dataToSend.size() >= 5 ? 5 : dataToSend.size() % 5 }; // Send 5 transactions or less
 
-		iResult = send(m_Socket, dataToSend.front().data(),
+		iResult = send(m_Socket, dataToSend.front().c_str(),
 			dataToSend.front().length(), 0);
+		/*iResult = send(m_Socket, "sfsg4d|gdfgw1|354:258|cs|1|\0",
+				28, 0);*/
 		if (SOCKET_ERROR == iResult)
 		{
 			// TODO log send error
 			closesocket(m_Socket);
 			break;
 		}
+		dataToSend.pop_front();
 	}
 	/* Receive server reply */
 	int bytesReceived{};
 	char inputBuffer[1000];
-	do
+	//do
 	{
-		iResult = recv(m_Socket, inputBuffer, bytesReceived, 0);
-		if (iResult > 0)
+		bytesReceived = recv(m_Socket, inputBuffer, sizeof(inputBuffer), 0);
+		if (bytesReceived > 0)
 		{
 			std::cout << "Server reply: " << std::string(inputBuffer, bytesReceived) << std::endl;
 		}
-		else if (0 == iResult)
+		else if (0 == bytesReceived)
 		{
 			std::cout << "Connection closed" << std::endl;
 		}
@@ -122,7 +138,7 @@ void CClient::Send()
 		{
 			//TODO log receive error
 		}
-	} while (iResult > 0 && bytesReceived > 0);	
+	}// while (bytesReceived > 0);	
 }
 
 void CClient::PushTransaction(const std::string & singleTransaction)
