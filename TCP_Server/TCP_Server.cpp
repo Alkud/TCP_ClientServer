@@ -27,10 +27,6 @@ void process(CServer& server)
 int main(int argc, char* argv[])
 {
 	CServer server{ argv[1] };	
-	/*server.CheckPacket("sfsg4d|gdfgw1|354:258|cs|1|ergerg|njknk|123:145|dd|2|sfsg4d|gdfgw1|354:258|cs|1|ergerg|njknk|123:145|dd|2|sfsg4d|gdfgw1|354:258|cs|1|", '|');
-	server.SplitPacket("sfsg4d|gdfgw1|354:258|cs|1|ergerg|njknk|123:145|dd|2|sfsg4d|gdfgw1|354:258|cs|1|ergerg|njknk|123:145|dd|2|sfsg4d|gdfgw1|354:258|cs|1|", '|');
-	server.CheckTransaction("sfsg4d|gdfgw1|354:258|cs|1|", '|');
-	server.SplitTransaction("sfsg4d|gdfgw1|354:258|cs|1|", '|');*/
 	std::cout << "Server created, enter an instruction or 'quit' to exit" << std::endl;
 	std::cout << "local server: ";
 	std::string userInput{};
@@ -68,8 +64,6 @@ int main(int argc, char* argv[])
 				std::cout << "Server not started!"<< std::endl;
 				std::cout << "local server: ";
 			}
-
-			
 		}
 		else if ("list" == userInput)
 		{
@@ -89,6 +83,11 @@ int main(int argc, char* argv[])
 		{
 			shouldExit.store(true);
 			break;
+		}
+		else
+		{
+			std::cout << "\nUnknown instruction";
+			std::cout << "\nlocal server: ";
 		}
 		std::cin >> userInput;
 	}

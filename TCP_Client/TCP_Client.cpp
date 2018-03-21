@@ -85,6 +85,11 @@ int main(int argc, char* argv[])
 			shouldExit.store(true);
 			break;
 		}
+		else
+		{
+			std::cout << "\nUnknown instruction";
+			std::cout << "\nclient: ";
+		}
 		std::getline(std::cin, userInput);
 		command = SplitUserInput(userInput);
 	}

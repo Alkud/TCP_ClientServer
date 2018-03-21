@@ -98,9 +98,6 @@ void CServer::Receive()
 	sockaddr_in clientAddress{};
 	int clientAddressSize{ sizeof(clientAddress) };
 
-	/*u_long iMode = 1; // non blcoking mode
-	iResult = ioctlsocket(m_ListenSocket, FIONBIO, &iMode);*/
-
 	int iTimeout = 1;
 	setsockopt(m_ListenSocket, SOL_SOCKET, SO_RCVTIMEO,
 		(const char *)&iTimeout, sizeof(iTimeout));
@@ -109,15 +106,11 @@ void CServer::Receive()
 	int clientsWaiting;
 	struct timeval tv;
 
-	// Set up the file descriptor set.
+	// Wait until timeout or data received
 	FD_ZERO(&fds);
 	FD_SET(m_ListenSocket, &fds);
-
-	// Set up the struct timeval for the timeout.
 	tv.tv_sec = 1;
-	tv.tv_usec = 0;
-
-	// Wait until timeout or data received.
+	tv.tv_usec = 0;	
 	clientsWaiting = select(m_ListenSocket, &fds, NULL, NULL, &tv);
 
 	if (0 == clientsWaiting)
@@ -143,15 +136,11 @@ void CServer::Receive()
 		std::thread newThread(&CServer::GetClientData, this, clientSocket.get());
 		newThread.detach();
 
-		// Set up the file descriptor set.
+		// Wait until timeout or data received
 		FD_ZERO(&fds);
 		FD_SET(m_ListenSocket, &fds);
-
-		// Set up the struct timeval for the timeout.
 		tv.tv_sec = 1;
 		tv.tv_usec = 0;
-
-		// Wait until timeout or data received.
 		clientsWaiting = select(m_ListenSocket, &fds, NULL, NULL, &tv);
 
 		if (0 == clientsWaiting)
@@ -189,6 +178,7 @@ void CServer::GetClientData(const SOCKET* clientSocket)
 	char inputBuffer[1000];
 	bytesReceived = recv(*clientSocket, inputBuffer, sizeof(inputBuffer), 0);
 	//while (/*iResult != SOCKET_ERROR && */ bytesReceived > 0)
+	if (bytesReceived > 0)
 	{
 		std::cout << "\nReceived bytes: " << bytesReceived << std::endl;
 		std::cout << "local server: ";
@@ -207,8 +197,7 @@ void CServer::GetClientData(const SOCKET* clientSocket)
 		}
 		//bytesReceived = recv(*clientSocket, inputBuffer, sizeof(inputBuffer), 0);
 	}
-
-	if (bytesReceived < 0)
+	else
 	{
 		//TODO log recv error
 	}
