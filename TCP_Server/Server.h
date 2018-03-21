@@ -10,6 +10,7 @@
 #include <string>
 #include <atomic>
 #include <mutex>
+#include <fstream>
 
 #pragma comment (lib, "WS2_32.lib")
 
@@ -43,6 +44,8 @@ private:
 	bool CheckTransaction(const std::string& transaction, const char delimiter);
 	stringVector SplitTransaction(const std::string& transaction, const char delimiter);
 
+	void logError(std::string message);
+
 
 	PCSTR m_PortNumber;
 	PADDRINFOA m_AddrInfo;
@@ -52,5 +55,8 @@ private:
 
 	std::mutex dataMutex;
 	stringVector receivedData;
+
+	std::mutex logMutex;
+	std::ofstream logFile{ "client.log" };
 };
 

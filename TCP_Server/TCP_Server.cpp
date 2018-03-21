@@ -14,7 +14,7 @@ void process(CServer& server)
 	if (server.Initialize())
 	{	
 		shouldExit.store(true);
-	}	
+	}
 	while (!shouldExit.load())
 	{
 		if (server.run())

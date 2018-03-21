@@ -14,6 +14,7 @@ CServer::CServer(PCSTR portNumber) :
 
 CServer::~CServer()
 {
+	logError("Server stoped");
 	WSACleanup();
 }
 
@@ -24,6 +25,10 @@ int CServer::Initialize()
 	WORD wVersionRequested{ MAKEWORD(2, 2) };
 
 	iResult = WSAStartup(wVersionRequested, &wsaDATA);
+
+	if (0 == iResult)
+		logError("Server started");
+
 	return iResult;
 }
 
@@ -53,7 +58,7 @@ int CServer::Listen()
 	iResult = getaddrinfo(nullptr, m_PortNumber, &hints, &m_AddrInfo);
 	if (0 != iResult) // Resolve server address failed
 	{		
-		// TODO log error
+		logError("Resolve server address failed");
 		return iResult; 
 	}		
 
@@ -62,7 +67,7 @@ int CServer::Listen()
 	{
 		iResult = WSAGetLastError();
 		freeaddrinfo(m_AddrInfo);		
-		// TODO log error
+		logError("Socket creation failed");
 		return iResult;
 	}	
 
@@ -73,20 +78,17 @@ int CServer::Listen()
 		iResult = WSAGetLastError();
 		freeaddrinfo(m_AddrInfo);
 		closesocket(m_ListenSocket);
-		// TODO log error
+		logError("Bind failed");
 		return iResult;
 	}
-
 	freeaddrinfo(m_AddrInfo);
-
-	//TODO log "listen for connections"
 
 	/* Listen for client connections */
 	iResult = listen(m_ListenSocket, MAX_CONN);
-	if (SOCKET_ERROR == iResult) // Bind failed
+	if (SOCKET_ERROR == iResult) // Listen failed
 	{	
 		closesocket(m_ListenSocket);	
-		// TODO log error
+		logError("Listen failed");
 		return iResult;
 	}	
 	return iResult;
@@ -131,8 +133,10 @@ void CServer::Receive()
 		clientHost = gethostbyaddr(reinterpret_cast<char*>(&clientAddress.sin_addr.S_un.S_addr),
 			4, AF_INET);
 
-		// TODO log "accepted, client host name"
-		std::cout << "\nConnection accepted from host: " << clientHost->h_name;
+		logError("Connection accepted from host : " + std::string{ clientHost->h_name });
+
+		//std::cout << "\nConnection accepted from host: " << clientHost->h_name;
+
 		std::thread newThread(&CServer::GetClientData, this, clientSocket.get());
 		newThread.detach();
 
@@ -177,10 +181,9 @@ void CServer::GetClientData(const SOCKET* clientSocket)
 	int bytesReceived{};
 	char inputBuffer[1000];
 	bytesReceived = recv(*clientSocket, inputBuffer, sizeof(inputBuffer), 0);
-	//while (/*iResult != SOCKET_ERROR && */ bytesReceived > 0)
 	if (bytesReceived > 0)
 	{
-		std::cout << "\nReceived bytes: " << bytesReceived << std::endl;
+		//std::cout << "\nReceived bytes: " << bytesReceived << std::endl;
 		std::cout << "local server: ";
 		std::string packetString{ std::string(inputBuffer, bytesReceived) };
 		if (CheckPacket(packetString, '|'))
@@ -195,11 +198,10 @@ void CServer::GetClientData(const SOCKET* clientSocket)
 			}
 			dataMutex.unlock();
 		}
-		//bytesReceived = recv(*clientSocket, inputBuffer, sizeof(inputBuffer), 0);
 	}
 	else
 	{
-		//TODO log recv error
+		logError("Data receiving error");
 	}
 
 	//TODO log "From client [addr]: received # transactions"
@@ -211,7 +213,7 @@ void CServer::GetClientData(const SOCKET* clientSocket)
 	iResult = shutdown(*clientSocket, SD_SEND);
 	if (SOCKET_ERROR == iResult)
 	{
-		// TODO log shutdown error
+		logError("Shutdown connection error");
 	}
 	iResult = closesocket(*clientSocket);
 	if (-1 == iResult)
@@ -287,4 +289,32 @@ stringVector CServer::SplitTransaction(const std::string& transaction, const cha
 		last = transaction.find_first_of(delimiter, first);
 	}
 	return result;
+}
+
+const std::string CurrentDateTime()
+{
+	time_t now = time(0);
+	tm tstruct;
+	char buf[80];
+	tstruct = *localtime(&now);
+	strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+	return buf;
+}
+
+void CServer::logError(std::string message)
+{
+	if (logFile.is_open())
+	{
+		logMutex.lock();
+		logFile << CurrentDateTime() << " " <<  message << '\n';
+		logMutex.unlock();
+	}
+	else
+	{
+		logMutex.lock();
+		logFile.open("client.log", std::ios_base::app);
+		logFile << CurrentDateTime() << " " << message << '\n';
+		logMutex.unlock();
+	}
+	logFile.close();
 }
