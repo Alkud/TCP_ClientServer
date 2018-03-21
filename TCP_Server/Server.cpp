@@ -5,58 +5,6 @@
 #include <memory>
 #include <iostream>
 
-//void GetClientData(const SOCKET* clientSocket, stringVector& container, std::mutex& mutex)
-//{
-//	if (nullptr == clientSocket)
-//		return;
-//
-//	size_t receivedTransactions{};
-//
-//	int bytesReceived{};
-//	char inputBuffer[1000];
-//	bytesReceived = recv(*clientSocket, inputBuffer, sizeof(inputBuffer), 0);
-//	//while (/*iResult != SOCKET_ERROR && */ bytesReceived > 0)
-//	{
-//		std::cout << "Received bytes: " << bytesReceived << std::endl;
-//		std::cout << "local server: ";
-//		std::string packetString{ std::string(inputBuffer, bytesReceived) };
-//		if (CheckPacket(packetString, '|'))
-//		{
-//			mutex.lock();
-//			auto transactions{ SplitPacket(packetString, '|') };
-//			receivedTransactions = transactions.size();
-//			for (auto transactionString : transactions)
-//			{
-//				if (CheckTransaction(transactionString, '|'))
-//					container.push_back(transactionString);
-//			}
-//			mutex.unlock();
-//		}
-//		//bytesReceived = recv(*clientSocket, inputBuffer, sizeof(inputBuffer), 0);
-//	}
-//
-//	if (bytesReceived < 0)
-//	{
-//		//TODO log recv error
-//	}
-//
-//	//TODO log "From client [addr]: received # transactions"
-//
-//	std::string response{ "Received " + std::to_string(receivedTransactions) + " transactions" };
-//	int iResult (send(*clientSocket, response.c_str(), response.length(), 0));
-//
-//	/* Disconnect the client */
-//	iResult = shutdown(*clientSocket, SD_SEND);
-//	if (SOCKET_ERROR == iResult)
-//	{
-//		// TODO log shutdown error
-//	}
-//	iResult = closesocket(*clientSocket);
-//	if (-1 == iResult)
-//		iResult = WSAGetLastError();
-//}
-
-
 CServer::CServer(PCSTR portNumber) :
 	m_PortNumber{ portNumber ? portNumber : DEFAULT_PORT }, m_AddrInfo{ nullptr },
 	m_ListenSocket { INVALID_SOCKET}
@@ -181,23 +129,19 @@ void CServer::Receive()
 		
 
 	std::shared_ptr<SOCKET> clientSocket{ new SOCKET{ accept(m_ListenSocket,
-		/*reinterpret_cast*/(sockaddr*)&clientAddress,
+		reinterpret_cast<sockaddr*>(&clientAddress),
 		&clientAddressSize) } };
 	while (*clientSocket != INVALID_SOCKET)
 	{
 		m_NumClients.store(m_NumClients.load() + 1);
 		HOSTENT* clientHost;
-		clientHost = gethostbyaddr(/*reinterpret_cast*/(char*)&clientAddress.sin_addr.S_un.S_addr,
+		clientHost = gethostbyaddr(reinterpret_cast<char*>(&clientAddress.sin_addr.S_un.S_addr),
 			4, AF_INET);
 
 		// TODO log "accepted, client host name"
-		std::cout << "Connection accepted. Host: " << clientHost->h_name << std::endl;
-
-		//std::thread newThread{ [clientSocket, this](){this->GetClientData(clientSocket.get()); } };
+		std::cout << "\nConnection accepted from host: " << clientHost->h_name;
 		std::thread newThread(&CServer::GetClientData, this, clientSocket.get());
 		newThread.detach();
-		//std::thread newThread{ [](){ return; } };
-		//GetClientData(clientSocket.get());
 
 		// Set up the file descriptor set.
 		FD_ZERO(&fds);
@@ -214,11 +158,10 @@ void CServer::Receive()
 		{
 			m_NumClients.store(m_NumClients.load() - 1);
 			break;
-		}
-			
+		}			
 
 		clientSocket.reset( new SOCKET{ accept(m_ListenSocket,
-			/*reinterpret_cast*/(sockaddr*)&clientAddress,
+			reinterpret_cast<sockaddr*>(&clientAddress),
 			&clientAddressSize) });
 	}
 	closesocket(m_ListenSocket);
@@ -247,7 +190,7 @@ void CServer::GetClientData(const SOCKET* clientSocket)
 	bytesReceived = recv(*clientSocket, inputBuffer, sizeof(inputBuffer), 0);
 	//while (/*iResult != SOCKET_ERROR && */ bytesReceived > 0)
 	{
-		std::cout << "Received bytes: " << bytesReceived << std::endl;
+		std::cout << "\nReceived bytes: " << bytesReceived << std::endl;
 		std::cout << "local server: ";
 		std::string packetString{ std::string(inputBuffer, bytesReceived) };
 		if (CheckPacket(packetString, '|'))

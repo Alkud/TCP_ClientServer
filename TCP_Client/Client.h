@@ -37,6 +37,9 @@ private:
 	void Send();
 
 	bool CheckTransaction(const std::string& transaction, const char delimiter);
+	stringVector SplitTransaction(const std::string& transaction, const char delimiter);
+	stringVector SplitPacket(const std::string& packet, const char delimiter);
+	bool CheckPacket(const std::string& transaction, const char delimiter);	
 
 	PCSTR m_ServerAddress;
 	PCSTR m_ServerPortNumber;

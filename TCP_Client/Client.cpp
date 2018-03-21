@@ -38,7 +38,7 @@ int CClient::run()
 		return iResult;
 	}
 	Send();	
-	//iResult = Disconnect();
+	iResult = Disconnect();
 	return iResult;
 }
 
@@ -93,7 +93,8 @@ int CClient::Disconnect()
 		// TODO log shutdown error
 		return iResult;
 	}
-	//iResult = closesocket(m_Socket);
+	iResult = closesocket(m_Socket);
+	m_Socket = INVALID_SOCKET;
 	return iResult;
 }
 
@@ -103,23 +104,23 @@ void CClient::Send()
 		return;
 
 	int iResult{};
-	/* Send queued transactions */
-	while (!dataToSend.empty())
-	{	
-		size_t packetsToSend{ dataToSend.size() >= 5 ? 5 : dataToSend.size() % 5 }; // Send 5 transactions or less
 
+	/* Send queued transactions */
+	size_t packetsToSend{ dataToSend.size() >= 5 ? 5 : dataToSend.size() % 5 }; // Send 5 transactions or less
+	for (size_t idx{}; idx < packetsToSend; idx++)
+	{
 		iResult = send(m_Socket, dataToSend.front().c_str(),
 			dataToSend.front().length(), 0);
-		/*iResult = send(m_Socket, "sfsg4d|gdfgw1|354:258|cs|1|\0",
-				28, 0);*/
 		if (SOCKET_ERROR == iResult)
 		{
 			// TODO log send error
 			closesocket(m_Socket);
-			break;
+			//break;
+			return;
 		}
 		dataToSend.pop_front();
 	}
+
 	/* Receive server reply */
 	int bytesReceived{};
 	char inputBuffer[1000];
@@ -128,11 +129,13 @@ void CClient::Send()
 		bytesReceived = recv(m_Socket, inputBuffer, sizeof(inputBuffer), 0);
 		if (bytesReceived > 0)
 		{
-			std::cout << "Server reply: " << std::string(inputBuffer, bytesReceived) << std::endl;
+			std::cout << "\nServer reply: " << std::string(inputBuffer, bytesReceived) << std::endl;
+			std::cout << "client: ";
 		}
 		else if (0 == bytesReceived)
 		{
-			std::cout << "Connection closed" << std::endl;
+			std::cout << "\nConnection closed" << std::endl;
+			std::cout << "client: ";
 		}
 		else
 		{
@@ -143,8 +146,14 @@ void CClient::Send()
 
 void CClient::PushTransaction(const std::string & singleTransaction)
 {
-	if (CheckTransaction(singleTransaction, '|'))
-		dataToSend.push_back(singleTransaction);
+	if (CheckPacket(singleTransaction, '|'))
+	{
+		auto packet{ SplitPacket(singleTransaction, '|') };
+		for (auto& transaction : packet)
+		{
+			dataToSend.push_back(transaction);
+		}
+	}	
 }
 
 void CClient::PushFile(const std::string & fileName)
@@ -163,7 +172,48 @@ void CClient::PushFile(const std::string & fileName)
 	}
 }
 
-bool CClient::CheckTransaction(const std::string & transaction, const char delimiter)
+stringVector CClient::SplitPacket(const std::string & packet, const char delimiter)
+{
+	stringVector result{};
+	auto first{ 0U };
+	auto last{ packet.find_first_of(delimiter, 0) };
+	size_t delimitersCount{};
+	std::string transactionString{};
+	while (last != std::string::npos)
+	{
+		delimitersCount++;
+		if (5 == delimitersCount)
+		{
+			transactionString += packet.substr(first, last - first + 1);
+			result.push_back(transactionString);
+			transactionString.clear();
+			delimitersCount = 0;
+		}
+		else
+		{
+			transactionString += packet.substr(first, last - first + 1);
+		}
+		first = last + 1;
+		last = packet.find_first_of(delimiter, first);
+	}
+	return result;
+}
+
+bool CClient::CheckPacket(const std::string & packet, const char delimiter)
+{
+	size_t first{ 0U };
+	size_t last{ packet.find_first_of(delimiter, 0) };
+	size_t delimitersCount{};
+	while (last != std::string::npos)
+	{
+		delimitersCount++;
+		first = last + 1;
+		last = packet.find_first_of(delimiter, first);
+	}
+	return (delimitersCount % 5 == 0);
+}
+
+bool CClient::CheckTransaction(const std::string& transaction, const char delimiter)
 {
 	if (transaction.empty())
 		return false;
@@ -179,3 +229,16 @@ bool CClient::CheckTransaction(const std::string & transaction, const char delim
 	return (delimitersCount == 5);
 }
 
+stringVector CClient::SplitTransaction(const std::string& transaction, const char delimiter)
+{
+	stringVector result{};
+	auto first{ 0U };
+	auto last{ transaction.find_first_of(delimiter, 0) };
+	while (last != std::string::npos)
+	{
+		result.push_back(transaction.substr(first, last - first));
+		first = last + 1;
+		last = transaction.find_first_of(delimiter, first);
+	}
+	return result;
+}
