@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 			client.PushTransaction(command[1]);
 			std::cout << "client: ";
 		}
-		else if ("sendfile " == userInput)
+		else if ("sendfile" == command[0])
 		{
 			client.PushFile(command[1]);
 			std::cout << "client: ";
